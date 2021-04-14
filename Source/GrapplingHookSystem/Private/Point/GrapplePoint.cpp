@@ -11,6 +11,7 @@
 #include "Character/GHCharacter.h"
 #include "kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 AGrapplePoint::AGrapplePoint()
@@ -19,6 +20,8 @@ AGrapplePoint::AGrapplePoint()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SphereComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SphereComp"));
+	LandingZoneComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LandingZoneComp"));
+	DeactivateZoneComp = CreateDefaultSubobject<UBoxComponent>(TEXT("DeactivateZoneComp"));
 	DetectionNodeWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("DetectionNodeWidget"));
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> DetectionNodeObj(TEXT("/Game/UI/WB_DetactionNode.WB_DetactionNode_C"));
@@ -37,6 +40,7 @@ AGrapplePoint::AGrapplePoint()
 
 	RootComponent = SphereComp;
 	DetectionNodeWidget->SetupAttachment(RootComponent);
+	LandingZoneComp->SetupAttachment(RootComponent);
 
 	bIsActivate = false;
 }

@@ -7,6 +7,7 @@
 #include "GrapplePoint.generated.h"
 
 class AGHCharacter;
+class UBoxComponent;
 class UDetectionNode;
 class UWidgetComponent;
 class USphereComponent;
@@ -34,6 +35,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Character")
 	AGHCharacter* GHCharacter;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	UStaticMeshComponent* LandingZoneComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	UBoxComponent* DeactivateZoneComp;
 
 	bool bIsActivate;
 

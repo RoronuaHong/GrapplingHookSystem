@@ -5,10 +5,12 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Point/GrapplePoint.h"
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
-#include "Kismet/GameplayStatics.h"
+#include "CableComponent.h"
 
 // Sets default values
 AGHCharacter::AGHCharacter()
@@ -18,15 +20,43 @@ AGHCharacter::AGHCharacter()
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
+	RopeComp = CreateDefaultSubobject<UCableComponent>(TEXT("RopeComp"));
+	KunaiComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KunaiComp"));
+
+	RopeComp->SetAttachEndTo(this, FName(KunaiComp->GetName()));
+
+	FRotator Rotation;
+
+	Rotation.Yaw = 0.0f;
+	Rotation.Pitch = -90.0f;
+	Rotation.Roll = 0.0f;
+
+	KunaiComp->SetWorldRotation(Rotation);
 
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
 	CameraComp->SetupAttachment(SpringArmComp);
+	RopeComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
+	KunaiComp->SetupAttachment(RootComponent);
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
 
 	DetectionRadius = 2000.0f;
 	GrappleThrowDistance = 1200.0f;
+
+	// Get Grapple Wave.
+	static ConstructorHelpers::FObjectFinder<USoundWave> GrappleWaveObj(TEXT("SoundWave'/Game/Sounds/A_Grapple.A_Grapple'"));
+
+	if(GrappleWaveObj.Object) {
+		GrappleWave = GrappleWaveObj.Object;
+	}
+
+	// Get Sound Wave.
+	static ConstructorHelpers::FObjectFinder<USoundWave> JumpWaveObj(TEXT("SoundWave'/Game/Sounds/A_Jump.A_Jump'"));
+
+	if(JumpWaveObj.Object) {
+		JumpWave = JumpWaveObj.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -35,6 +65,8 @@ void AGHCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	GHCharacter = Cast<AGHCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+
+	GHCharacter->GetCharacterMovement()->GravityScale = 1.0f;
 }
 
 // Called every frame
@@ -82,6 +114,8 @@ void AGHCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("UnCrouch", IE_Released, this, &AGHCharacter::EndCrouch);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AGHCharacter::BeginJump);
+
+	PlayerInputComponent->BindAction("Grapple", IE_Pressed, this, &AGHCharacter::StartGrapplingMovement);
 }
 
 void AGHCharacter::CheckForGrapplePoints() {
@@ -145,17 +179,10 @@ void AGHCharacter::ActivateGrapplePoint() {
 	const bool bIsHit = GetWorld()->LineTraceSingleByChannel(OutHit, StartVector, EndVector, ECC_Visibility, TraceParams);
 	//DrawDebugLine(GetWorld(), StartVector, EndVector, FColor::Blue, false, 1.0f);
 
-	// FIXME: 会产生闪烁
 	if(bIsHit) {
 		if(DetectedActor == OutHit.GetActor()) {
 			GrapplePointRef->Activate(this);
 		}
-	} else {
-		UE_LOG(LogTemp, Log, TEXT("1: %s"), *(StartVector).ToString());
-		UE_LOG(LogTemp, Log, TEXT("2: %s"), *(EndVector).ToString());
-
-		//UE_LOG(LogTemp, Log, TEXT("3: %s"), *GetNameSafe(DetectedActor));
-		//UE_LOG(LogTemp, Log, TEXT("5: %s"), *GetNameSafe(OutHit.GetActor()));
 	}
 }
 
@@ -164,6 +191,37 @@ void AGHCharacter::DeactivateGrapplePoint() {
 		GrapplePointRef->Dectivate();
 		GrapplePointRef = nullptr;
 	}
+}
+
+void AGHCharacter::PlayGrappleWave()
+{
+	UGameplayStatics::PlaySound2D(this, GrappleWave);
+}
+
+void AGHCharacter::PlayJumpWave()
+{
+	UGameplayStatics::PlaySound2D(this, JumpWave);
+}
+
+void AGHCharacter::StartGrapplingMovement()
+{
+	PlayJumpWave();
+
+	//if(GHCharacter) {
+	//	GHCharacter->GetCharacterMovement()->GravityScale = 0.0f;
+	//	GHCharacter->GetCharacterMovement()->StopMovementImmediately();
+
+	//	StartPos = GHCharacter->GetActorLocation();
+
+	//	GHCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+
+	//	MovingWithGrapple = true;
+	//}
+}
+
+void AGHCharacter::MoveRope()
+{
+
 }
 
 float AGHCharacter::GetDetectionRadius() {

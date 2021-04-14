@@ -6,7 +6,9 @@
 #include "GameFramework/Character.h"
 #include "GHCharacter.generated.h"
 
+class USoundWave;
 class AGrapplePoint;
+class UCableComponent;
 class UCameraComponent;
 class USpringArmComponent;
 
@@ -29,16 +31,33 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	USpringArmComponent* SpringArmComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rope")
+	UCableComponent* RopeComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rope")
+	UStaticMeshComponent* KunaiComp;
+
+	UPROPERTY()
+	USoundWave* GrappleWave;
+
+	UPROPERTY()
+	USoundWave* JumpWave;
+
 	AGrapplePoint* GrapplePointRef;
 
 	AActor* DetectedActor;
 	AGHCharacter* GHCharacter;
+
+	FVector StartPos;
+	FVector EndPos;
 
 	TArray<TEnumAsByte<enum EObjectTypeQuery>> objectTypes;
 
 	float DetectionRadius;
 	float GrappleThrowDistance;
 	float HighestDotProduct;
+	
+	bool MovingWithGrapple;
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -56,6 +75,13 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "GrapplePoint")
 	void DeactivateGrapplePoint();
+
+	UFUNCTION(BlueprintCallable, Category = "Grapple")
+	void StartGrapplingMovement();
+
+	void MoveRope();
+	void PlayJumpWave();
+	void PlayGrappleWave();
 
 public:	
 	// Called every frame
