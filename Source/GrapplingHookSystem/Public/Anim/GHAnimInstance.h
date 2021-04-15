@@ -26,6 +26,9 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "MyAnim")
 	void AnimNotify_ThrowRope(UAnimNotify* Notify);
 
+	UFUNCTION(BlueprintCallable, Category="MyAnim")
+	void AnimNotify_StartMovement(UAnimNotify * Notify);
+
 	UFUNCTION(BlueprintCallable, Category = "MyAnim")
 	void AnimNotify_RopeAppears(UAnimNotify* Notify);
 

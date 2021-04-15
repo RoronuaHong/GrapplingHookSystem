@@ -43,6 +43,18 @@ void UGHAnimInstance::AnimNotify_ThrowRope(UAnimNotify* Notify)
 	}
 }
 
+void UGHAnimInstance::AnimNotify_StartMovement(UAnimNotify * Notify) {
+	OwningActor=GetOwningActor();
+
+	if(OwningActor) {
+		MyCharacter=Cast<AGHCharacter>(OwningActor);
+
+		if(MyCharacter) {
+			MyCharacter->StartGrapplingMovement();
+		}
+	}
+}
+
 void UGHAnimInstance::AnimNotify_RopeAppears(UAnimNotify * Notify) {
 	OwningActor=GetOwningActor();
 

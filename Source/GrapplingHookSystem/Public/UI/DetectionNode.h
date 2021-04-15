@@ -23,7 +23,7 @@ protected:
 	UPROPERTY(Meta=(BindWidget))
 	UImage* Filling;
 
-	UPROPERTY(meta = (BindWidgetAnim))
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
 	UWidgetAnimation* NodeUse;
 
 public:

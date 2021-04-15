@@ -43,6 +43,7 @@ protected:
 	UPROPERTY()
 	USoundWave* JumpWave;
 
+
 	UPROPERTY(EditDefaultsOnly, Category=Curve)
 	UCurveFloat* GroupLenCurve;
 
@@ -51,10 +52,24 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly, Category=Curve)
-	UCurveFloat * GroupPosCurve;
+	UCurveFloat* GroupPosCurve;
 
 	UPROPERTY(EditDefaultsOnly, Category=Curve)
-	UCurveFloat * AirPosCurve;
+	UCurveFloat* AirPosCurve;
+
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* GroupSpeedCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* AirSpeedCurve;
+
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* GroupHeightOffsetCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* AirHeightOffsetCurve;
 
 	AGrapplePoint* GrapplePointRef;
 	AGrapplePoint* CurrentGrapplePoint;
@@ -77,6 +92,8 @@ protected:
 	float HighestDotProduct;
 	float RopeBaseLength;
 	float CurrentLength;
+	float CurrentLen;
+	float KunaiAlpha;
 	
 	bool bIsInGrapplingAnimation;
 	bool bIsMovingWithGrapple;
@@ -95,7 +112,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="GrapplePoint")
 	void ActivateGrapplePoint();
 
-	UFUNCTION(BlueprintCallable, Category = "GrapplePoint")
+	UFUNCTION(BlueprintCallable, Category="GrapplePoint")
 	void DeactivateGrapplePoint();
 
 	UFUNCTION(BlueprintCallable, Category = "Grapple")
@@ -103,9 +120,6 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Grapple")
 	void GrapplingMovement();
-
-	UFUNCTION(BlueprintCallable, Category = "Grapple")
-	void StartGrapplingMovement();
 
 	void MoveRope();
 	void SettingRopeParam();
@@ -122,6 +136,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Grapple")
 	void PlayGrappleWave();
+
+	UFUNCTION(BlueprintCallable, Category="Grapple")
+	void StartGrapplingMovement();
 
 	UFUNCTION(BlueprintCallable, Category="Grapple")
 	void RopeVisibility(bool visible);

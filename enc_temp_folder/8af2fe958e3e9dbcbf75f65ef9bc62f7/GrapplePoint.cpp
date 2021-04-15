@@ -109,8 +109,7 @@ void AGrapplePoint::UseRope()
 	bIsUse = true;
 
 	if(DetectionNode) {
-		//DetectionNode->PlayAnimation(DetectionNode->GetNodeUse(), 0.0f, 1, EUMGSequencePlayMode::Forward, 1.f, true);
-		DetectionNode->PlayAnimation(DetectionNode->GetNodeUse());
+		DetectionNode->PlayAnimation(DetectionNode->GetNodeUse(), 0.0f, 1, EUMGSequencePlayMode::Forward, 1.f, true);
 		//DetectionNode->SetVisibility(ESlateVisibility::Hidden);
 	}
 
