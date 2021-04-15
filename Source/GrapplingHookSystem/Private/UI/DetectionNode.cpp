@@ -11,3 +11,8 @@ void UDetectionNode::NativeConstruct() {
 UImage* UDetectionNode::GetFilling() {
 	return Filling;
 }
+
+UWidgetAnimation* UDetectionNode::GetNodeUse()
+{
+	return NodeUse;
+}

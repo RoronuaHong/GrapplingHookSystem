@@ -24,7 +24,7 @@ void UGHAnimInstance::NativeUpdateAnimation(float DeltaSeconds) {
 
 		MyCharacter = Cast<AGHCharacter>(OwningActor);
 
-		if (MyCharacter) {
+		if(MyCharacter) {
 			IsInAir = MyCharacter->GetCharacterMovement()->IsFalling();
 		}
 	}
@@ -38,7 +38,43 @@ void UGHAnimInstance::AnimNotify_ThrowRope(UAnimNotify* Notify)
 		MyCharacter = Cast<AGHCharacter>(OwningActor);
 
 		if(MyCharacter) {
-			//MyCharacter->Rope
+			MyCharacter->PlayGrappleWave();
+		}
+	}
+}
+
+void UGHAnimInstance::AnimNotify_RopeAppears(UAnimNotify * Notify) {
+	OwningActor=GetOwningActor();
+
+	if(OwningActor) {
+		MyCharacter=Cast<AGHCharacter>(OwningActor);
+
+		if(MyCharacter) {
+			MyCharacter->RopeVisibility(true);
+		}
+	}
+}
+
+void UGHAnimInstance::AnimNotify_RopeDissapear(UAnimNotify * Notify) {
+	OwningActor=GetOwningActor();
+
+	if(OwningActor) {
+		MyCharacter=Cast<AGHCharacter>(OwningActor);
+
+		if(MyCharacter) {
+			MyCharacter->RopeVisibility(false);
+		}
+	}
+}
+
+void UGHAnimInstance::AnimNotify_AnimEnd(UAnimNotify * Notify) {
+	OwningActor=GetOwningActor();
+
+	if(OwningActor) {
+		MyCharacter=Cast<AGHCharacter>(OwningActor);
+
+		if(MyCharacter) {
+			MyCharacter->ResetMovement();
 		}
 	}
 }

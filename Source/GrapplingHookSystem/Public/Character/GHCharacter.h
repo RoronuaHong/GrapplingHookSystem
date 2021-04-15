@@ -43,21 +43,43 @@ protected:
 	UPROPERTY()
 	USoundWave* JumpWave;
 
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* GroupLenCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat* AirLenCurve;
+
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat * GroupPosCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category=Curve)
+	UCurveFloat * AirPosCurve;
+
 	AGrapplePoint* GrapplePointRef;
+	AGrapplePoint* CurrentGrapplePoint;
 
 	AActor* DetectedActor;
 	AGHCharacter* GHCharacter;
 
 	FVector StartPos;
 	FVector EndPos;
+	FVector GrapplingDestination;
+
+	UAnimMontage* GrappleAirAnim;
+	UAnimMontage* GrappleGroundAnim;
 
 	TArray<TEnumAsByte<enum EObjectTypeQuery>> objectTypes;
 
+	float CurrentDistance;
 	float DetectionRadius;
 	float GrappleThrowDistance;
 	float HighestDotProduct;
+	float RopeBaseLength;
+	float CurrentLength;
 	
-	bool MovingWithGrapple;
+	bool bIsInGrapplingAnimation;
+	bool bIsMovingWithGrapple;
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -77,11 +99,16 @@ protected:
 	void DeactivateGrapplePoint();
 
 	UFUNCTION(BlueprintCallable, Category = "Grapple")
+	void ThrowGrapple();
+
+	UFUNCTION(BlueprintCallable, Category = "Grapple")
+	void GrapplingMovement();
+
+	UFUNCTION(BlueprintCallable, Category = "Grapple")
 	void StartGrapplingMovement();
 
 	void MoveRope();
-	void PlayJumpWave();
-	void PlayGrappleWave();
+	void SettingRopeParam();
 
 public:	
 	// Called every frame
@@ -89,6 +116,18 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(BlueprintCallable, Category="Grapple")
+	void PlayJumpWave();
+
+	UFUNCTION(BlueprintCallable, Category="Grapple")
+	void PlayGrappleWave();
+
+	UFUNCTION(BlueprintCallable, Category="Grapple")
+	void RopeVisibility(bool visible);
+
+	UFUNCTION(BlueprintCallable, Category="Grapple")
+	void ResetMovement();
 
 	float GetDetectionRadius();
 	float GetGrappleThrowDistance();

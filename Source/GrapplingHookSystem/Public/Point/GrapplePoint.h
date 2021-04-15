@@ -11,12 +11,13 @@ class UBoxComponent;
 class UDetectionNode;
 class UWidgetComponent;
 class USphereComponent;
+class UWidgetAnimation;
 
 UCLASS()
 class GRAPPLINGHOOKSYSTEM_API AGrapplePoint : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:	
 	// Sets default values for this actor's properties
 	AGrapplePoint();
@@ -30,8 +31,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category="Components")
 	UWidgetComponent* DetectionNodeWidget;
-	
+
 	UDetectionNode* DetectionNode;
+
+	FTimerHandle DectivateHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category="Character")
 	AGHCharacter* GHCharacter;
@@ -42,6 +45,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	UBoxComponent* DeactivateZoneComp;
 
+	bool bIsUse;
 	bool bIsActivate;
 
 public:	
@@ -53,6 +57,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Widget")
 	void Dectivate();
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	void Rectivate();
+
+	UFUNCTION(BlueprintCallable, Category = "Rope")
+	void UseRope();
+
+	UFUNCTION(BlueprintCallable, Category = "Rope")
+	UStaticMeshComponent* GetLandingZone();
 
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	void CheckDistanceFromPlayer();

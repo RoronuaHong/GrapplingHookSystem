@@ -37,8 +37,8 @@ AGrapplePoint::AGrapplePoint()
 
 	DetectionNodeWidget->SetWidgetSpace(EWidgetSpace::Screen);
 
-
 	RootComponent = SphereComp;
+
 	DetectionNodeWidget->SetupAttachment(RootComponent);
 	LandingZoneComp->SetupAttachment(RootComponent);
 
@@ -60,30 +60,65 @@ void AGrapplePoint::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(bIsActivate) {
+	if(bIsActivate && !bIsUse) {
 		CheckDistanceFromPlayer();
 	}
 }
 
 void AGrapplePoint::Activate(AGHCharacter* Character) {
-	if(Character) {
-		bIsActivate = true;
+	if(!bIsUse) {
+		if(Character) {
+			bIsActivate = true;
 
-		DetectionNode->SetVisibility(ESlateVisibility::Visible);
+			DetectionNode->SetVisibility(ESlateVisibility::Visible);
 
-		GHCharacter = Character;
+			GHCharacter = Character;
+		}
 	}
 }
 
 void AGrapplePoint::Dectivate() {
-	bIsActivate = false;
+	if(!bIsUse) {
+		bIsActivate = false;
 
-	DetectionNode->SetVisibility(ESlateVisibility::Hidden);
+		DetectionNode->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void AGrapplePoint::Rectivate()
+{
+	if(bIsUse) {
+		bIsUse = false;
+
+		// FIXME: 采用回放的方式恢复原形.
+		DetectionNode->PlayAnimation(DetectionNode->GetNodeUse(), 3.0f, 2, EUMGSequencePlayMode::Reverse, 100.f, false);
+		DetectionNode->SetVisibility(ESlateVisibility::Visible);
+
+		GetWorldTimerManager().ClearTimer(DectivateHandle);
+	}
+}
+
+void AGrapplePoint::UseRope()
+{
+	bIsUse = true;
+
+	if(DetectionNode) {
+		DetectionNode->PlayAnimation(DetectionNode->GetNodeUse(), 0.0f, 1, EUMGSequencePlayMode::Forward, 1.f, true);
+		DetectionNode->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	GetWorldTimerManager().SetTimer(DectivateHandle, this, &AGrapplePoint::Rectivate, 3.0f, false);
+}
+
+UStaticMeshComponent* AGrapplePoint::GetLandingZone()
+{
+	return LandingZoneComp;
 }
 
 void AGrapplePoint::CheckDistanceFromPlayer() {
 	float OutRangeA = 10.0f;
 	float OutRangeB = 80.0f;
+
 	float InRangeA = GHCharacter->GetDetectionRadius();
 	float InRangeB = GHCharacter->GetGrappleThrowDistance();
 

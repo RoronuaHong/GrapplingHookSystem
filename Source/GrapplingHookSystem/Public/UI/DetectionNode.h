@@ -23,6 +23,11 @@ protected:
 	UPROPERTY(Meta=(BindWidget))
 	UImage* Filling;
 
+	UPROPERTY(meta = (BindWidgetAnim))
+	UWidgetAnimation* NodeUse;
+
 public:
 	UImage* GetFilling();
+
+	UWidgetAnimation* GetNodeUse();
 };

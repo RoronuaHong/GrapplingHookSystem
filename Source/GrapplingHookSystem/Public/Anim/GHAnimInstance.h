@@ -26,6 +26,15 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "MyAnim")
 	void AnimNotify_ThrowRope(UAnimNotify* Notify);
 
+	UFUNCTION(BlueprintCallable, Category = "MyAnim")
+	void AnimNotify_RopeAppears(UAnimNotify* Notify);
+
+	UFUNCTION(BlueprintCallable, Category="MyAnim")
+	void AnimNotify_RopeDissapear(UAnimNotify * Notify);
+
+	UFUNCTION(BlueprintCallable, Category="MyAnim")
+	void AnimNotify_AnimEnd(UAnimNotify * Notify);
+
 public:
 	UGHAnimInstance();
 

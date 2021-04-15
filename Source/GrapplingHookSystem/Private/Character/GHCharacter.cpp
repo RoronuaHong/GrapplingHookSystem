@@ -11,6 +11,8 @@
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 #include "CableComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Animation/AnimMontage.h"
 
 // Sets default values
 AGHCharacter::AGHCharacter()
@@ -27,8 +29,8 @@ AGHCharacter::AGHCharacter()
 
 	FRotator Rotation;
 
-	Rotation.Yaw = 0.0f;
-	Rotation.Pitch = -90.0f;
+	Rotation.Yaw = -90.0f;
+	Rotation.Pitch = 0.0f;
 	Rotation.Roll = 0.0f;
 
 	KunaiComp->SetWorldRotation(Rotation);
@@ -57,12 +59,57 @@ AGHCharacter::AGHCharacter()
 	if(JumpWaveObj.Object) {
 		JumpWave = JumpWaveObj.Object;
 	}
+
+	// reference GrappleGroundAnim
+	ConstructorHelpers::FObjectFinder<UAnimMontage> GrappleGroundAnimObj(TEXT("AnimMontage'/Game/Animations/AM_GrappleGround.AM_GrappleGround'"));
+
+	if(GrappleGroundAnimObj.Object) {
+		GrappleGroundAnim = GrappleGroundAnimObj.Object;
+	}
+
+	// reference GrappleAirAnim
+	ConstructorHelpers::FObjectFinder<UAnimMontage> GrappleAirAnimObj(TEXT("AnimMontage'/Game/Animations/AM_GrappleAir.AM_GrappleAir'"));
+
+	if(GrappleGroundAnimObj.Object) {
+		GrappleAirAnim = GrappleAirAnimObj.Object;
+	}
+
+	// reference GroupRopeLength
+	ConstructorHelpers::FObjectFinder<UCurveFloat> GroupLenCurveObj(TEXT("CurveFloat'/Game/Animations/Curve_RopeLengthGround_Float.Curve_RopeLengthGround_Float'"));
+
+	if(GroupLenCurveObj.Object) {
+		GroupLenCurve = GroupLenCurveObj.Object;
+	}
+
+	// reference AirRopeLength
+	ConstructorHelpers::FObjectFinder<UCurveFloat> AirLenCurveObj(TEXT("CurveFloat'/Game/Animations/Curve_RopeLengthGround_Float.Curve_RopeLengthGround_Float'"));
+
+	if(AirLenCurveObj.Object) {
+		AirLenCurve = AirLenCurveObj.Object;
+	}
+
+
+	// reference GroupRopeLength
+	ConstructorHelpers::FObjectFinder<UCurveFloat> GroupPosCurveObj(TEXT("CurveFloat'/Game/Animations/Curve_RopePositionGround_Float.Curve_RopePositionGround_Float'"));
+
+	if(GroupPosCurveObj.Object) {
+		GroupPosCurve = GroupPosCurveObj.Object;
+	}
+
+	// reference AirRopeLength
+	ConstructorHelpers::FObjectFinder<UCurveFloat> AirPosCurveObj(TEXT("CurveFloat'/Game/Animations/Curve_RopePositionAir_Float.Curve_RopePositionAir_Float'"));
+
+	if(AirPosCurveObj.Object) {
+		AirPosCurve = AirPosCurveObj.Object;
+	}
 }
 
 // Called when the game starts or when spawned
 void AGHCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SettingRopeParam();
 	
 	GHCharacter = Cast<AGHCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 
@@ -75,6 +122,14 @@ void AGHCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CheckForGrapplePoints();
+
+	if(bIsInGrapplingAnimation) {
+		MoveRope();
+	}
+
+	if(bIsMovingWithGrapple) {
+		GrapplingMovement();
+	}
 }
 
 void AGHCharacter::MoveForward(float Value) {
@@ -115,7 +170,7 @@ void AGHCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AGHCharacter::BeginJump);
 
-	PlayerInputComponent->BindAction("Grapple", IE_Pressed, this, &AGHCharacter::StartGrapplingMovement);
+	PlayerInputComponent->BindAction("Grapple", IE_Pressed, this, &AGHCharacter::ThrowGrapple);
 }
 
 void AGHCharacter::CheckForGrapplePoints() {
@@ -181,6 +236,10 @@ void AGHCharacter::ActivateGrapplePoint() {
 
 	if(bIsHit) {
 		if(DetectedActor == OutHit.GetActor()) {
+			RopeComp->SetAttachEndTo(this, FName(KunaiComp->GetName()));
+
+			SettingRopeParam();
+
 			GrapplePointRef->Activate(this);
 		}
 	}
@@ -203,25 +262,112 @@ void AGHCharacter::PlayJumpWave()
 	UGameplayStatics::PlaySound2D(this, JumpWave);
 }
 
+void AGHCharacter::ThrowGrapple()
+{
+	if(GrapplePointRef) {
+		CurrentDistance = GrapplePointRef->GetDistanceTo(GHCharacter);
+
+		if(CurrentDistance <= GrappleThrowDistance && CurrentGrapplePoint != GrapplePointRef) {
+			if(bIsMovingWithGrapple) {
+				// TODO:
+				//GrapplingDestination
+			} else {
+				CurrentGrapplePoint = GrapplePointRef;
+
+				bIsInGrapplingAnimation = true;
+				bIsMovingWithGrapple = false;
+
+				GrapplingDestination = CurrentGrapplePoint->GetLandingZone()->GetComponentLocation() + FVector(0.0f, 0.0f, 110.0f);
+
+				// TODO: 角色转向.
+				//FRotator NewFVector = UKismetMathLibrary::FindLookAtRotation(GHCharacter->GetActorLocation(), GrapplingDestination);
+				//GHCharacter->SetActorRotation(FRotator(NewFVector.Yaw, 0.0f, 0.0f));
+
+				RopeBaseLength = (GHCharacter->GetActorLocation() - GrapplingDestination).Size();
+
+				GrapplePointRef->UseRope();
+
+				if(GHCharacter->GetCharacterMovement()->IsFalling()) {
+					GHCharacter->PlayAnimMontage(GrappleAirAnim);
+				} else {
+					GHCharacter->GetCharacterMovement()->DisableMovement();
+					GHCharacter->PlayAnimMontage(GrappleGroundAnim);
+				}
+
+				StartGrapplingMovement();
+			}
+		}
+	}
+}
+
+void AGHCharacter::GrapplingMovement() {
+	UE_LOG(LogTemp, Log, TEXT("321"));
+}
+
 void AGHCharacter::StartGrapplingMovement()
 {
 	PlayJumpWave();
 
-	//if(GHCharacter) {
-	//	GHCharacter->GetCharacterMovement()->GravityScale = 0.0f;
-	//	GHCharacter->GetCharacterMovement()->StopMovementImmediately();
+	if(GHCharacter) {
+		//GHCharacter->GetCharacterMovement()->GravityScale = 0.0f;
+		//GHCharacter->GetCharacterMovement()->StopMovementImmediately();
 
-	//	StartPos = GHCharacter->GetActorLocation();
+		//StartPos = GHCharacter->GetActorLocation();
 
-	//	GHCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		//GHCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 
-	//	MovingWithGrapple = true;
-	//}
+		//MovingWithGrapple = true;
+	}
+}
+
+void AGHCharacter::RopeVisibility(bool visible) {
+	KunaiComp->SetVisibility(visible);
+	RopeComp->SetVisibility(visible);
+}
+
+void AGHCharacter::ResetMovement() {
+	bIsMovingWithGrapple = false;
+	bIsInGrapplingAnimation = false;
+
+	CurrentGrapplePoint = nullptr;
+
+	GHCharacter->GetCharacterMovement()->GravityScale = 1.0f;
+	GHCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 }
 
 void AGHCharacter::MoveRope()
 {
+	USkeletalMeshComponent* CMesh = GetMesh();
+	
+	if(CMesh) {
+		UAnimInstance* AnimInst = CMesh->GetAnimInstance();
 
+		if(AnimInst) {
+			float CurrentLen = GroupLenCurve->GetFloatValue(AnimInst->Montage_GetPosition(AnimInst->GetCurrentActiveMontage()));
+			float KunaiAlpha = GroupPosCurve->GetFloatValue(AnimInst->Montage_GetPosition(AnimInst->GetCurrentActiveMontage()));
+
+			if(AnimInst->GetCurrentActiveMontage() != GrappleGroundAnim) {
+				CurrentLen = AirLenCurve->GetFloatValue(AnimInst->Montage_GetPosition(AnimInst->GetCurrentActiveMontage()));
+				KunaiAlpha = AirPosCurve->GetFloatValue(AnimInst->Montage_GetPosition(AnimInst->GetCurrentActiveMontage()));
+			}
+
+			// FIXME: 初始绳子会变长.
+			RopeComp->CableLength = CurrentLen;
+
+			FVector CurrentVector = FMath::Lerp(CMesh->GetSocketLocation(TEXT("hand_l")), CurrentGrapplePoint->GetActorLocation(), KunaiAlpha);
+
+			KunaiComp->SetWorldLocation(CurrentVector);
+		}
+	}
+}
+
+void AGHCharacter::SettingRopeParam() {
+	RopeComp->CableLength = 20.f;
+	RopeComp->CableWidth = 3.5f;
+	RopeComp->NumSides = 16;
+	RopeComp->TileMaterial = 8.0f;
+	RopeComp->NumSegments = 100.f;
+	RopeComp->SolverIterations = 40;
 }
 
 float AGHCharacter::GetDetectionRadius() {
